@@ -11,11 +11,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-
-type HAAlertConfigEntry = ConfigEntry[HAAlertManager]
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -217,26 +216,30 @@ class HAAlertManager:
         self._state_unsubs.clear()
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HAAlertConfigEntry) -> bool:
-    """Set up HA Alert from a config entry."""
-    manager = HAAlertManager(hass)
-    entry.runtime_data = manager
+type HAAlertConfigEntry = ConfigEntry[HAAlertManager]
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register services
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up HA Alert services."""
+
     async def handle_create(call: ServiceCall) -> None:
-        manager.create_alert(dict(call.data))
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.state.value == "loaded":
+                entry.runtime_data.create_alert(dict(call.data))
 
     async def handle_dismiss(call: ServiceCall) -> None:
-        alert_id = call.data["alert_id"]
-        if not manager.dismiss_alert(alert_id):
-            _LOGGER.warning("Alert %s not found for dismissal", alert_id)
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.state.value == "loaded":
+                alert_id = call.data["alert_id"]
+                if not entry.runtime_data.dismiss_alert(alert_id):
+                    _LOGGER.warning("Alert %s not found for dismissal", alert_id)
 
     async def handle_acknowledge(call: ServiceCall) -> None:
-        alert_id = call.data["alert_id"]
-        if not manager.acknowledge_alert(alert_id):
-            _LOGGER.warning("Alert %s not found for acknowledgement", alert_id)
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.state.value == "loaded":
+                alert_id = call.data["alert_id"]
+                if not entry.runtime_data.acknowledge_alert(alert_id):
+                    _LOGGER.warning("Alert %s not found for acknowledgement", alert_id)
 
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE, handle_create, schema=SERVICE_CREATE_SCHEMA
@@ -248,6 +251,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HAAlertConfigEntry) -> b
         DOMAIN, SERVICE_ACKNOWLEDGE, handle_acknowledge, schema=SERVICE_ALERT_ID_SCHEMA
     )
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: HAAlertConfigEntry) -> bool:
+    """Set up HA Alert from a config entry."""
+    manager = HAAlertManager(hass)
+    entry.runtime_data = manager
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await manager.async_start_repeat_task()
 
     return True
@@ -257,8 +269,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: HAAlertConfigEntry) -> 
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         entry.runtime_data.stop()
-        hass.services.async_remove(DOMAIN, SERVICE_CREATE)
-        hass.services.async_remove(DOMAIN, SERVICE_DISMISS)
-        hass.services.async_remove(DOMAIN, SERVICE_ACKNOWLEDGE)
 
     return unload_ok
