@@ -4,6 +4,10 @@
 
 **Integration version:** 2.2.0 | **Card version:** 1.2.4
 
+## 📸 Preview
+
+![HA Alert dashboard card](docs/screenshot.png)
+
 ## 📁 Installation
 
 ### Step 1: Copy the files
