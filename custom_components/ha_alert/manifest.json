@@ -1,0 +1,13 @@
+{
+  "domain": "ha_alert",
+  "name": "HA Alert",
+  "codeowners": [
+    "@bartjanisse"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/bartjanisse/ha-alert",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "requirements": [],
+  "version": "2.2.0"
+}

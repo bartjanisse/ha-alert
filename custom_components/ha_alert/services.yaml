@@ -1,0 +1,82 @@
+create:
+  name: Create Alert
+  description: Create a new alert that will be shown on the HA Alert card.
+  fields:
+    alert_type:
+      name: Alert Type
+      description: "Type of alert: error, warning, info, or success."
+      required: true
+      selector:
+        select:
+          options:
+            - error
+            - warning
+            - info
+            - success
+    message:
+      name: Message
+      description: The message text to display in the alert.
+      required: true
+      selector:
+        text:
+    title:
+      name: Title
+      description: Optional bold title shown above the message.
+      required: false
+      selector:
+        text:
+    entity_id:
+      name: Entity ID
+      description: Optional entity to notify when the alert is created.
+      required: false
+      selector:
+        entity:
+    repeat_interval:
+      name: Repeat Interval
+      description: Repeat interval in minutes (0-1440). The alert will re-appear at this interval.
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 1440
+          unit_of_measurement: minutes
+    repeat_until:
+      name: Repeat Until
+      description: "ISO timestamp until when to repeat. Example: 2025-12-31T23:59:59"
+      required: false
+      selector:
+        text:
+    condition_entity:
+      name: Condition Entity
+      description: Entity ID to monitor for auto-dismiss.
+      required: false
+      selector:
+        entity:
+    condition_state:
+      name: Condition State
+      description: State value that triggers auto-dismiss of the alert.
+      required: false
+      selector:
+        text:
+
+dismiss:
+  name: Dismiss Alert
+  description: Remove an active alert by its ID.
+  fields:
+    alert_id:
+      name: Alert ID
+      description: The ID of the alert to dismiss.
+      required: true
+      selector:
+        text:
+
+acknowledge:
+  name: Acknowledge Alert
+  description: Mark an alert as acknowledged (remembered).
+  fields:
+    alert_id:
+      name: Alert ID
+      description: The ID of the alert to acknowledge.
+      required: true
+      selector:
+        text:

@@ -1,0 +1,22 @@
+rules:
+  # Bronze (mandatory)
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: Integration is local push, no polling needed.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-setup:
+    status: exempt
+    comment: No external connection or authentication to validate at setup.
+  unique-config-entry: done
