@@ -1,5 +1,5 @@
 /**
- * HA Alert Card v1.2.5
+ * HA Alert Card v1.3.0
  * Maximum compatibility build
  */
 
@@ -9,96 +9,144 @@ var HA_ALERT_TRANSLATIONS = {
     acknowledged:    'Herinnerd',
     dismiss:         'Sluiten',
     no_alerts:       'Geen actieve alerts',
+    no_alerts_filter:'Geen alerts komen overeen met het filter',
     every:           'elke',
     min:             'min',
     error:           'FOUT',
     warning:         'WAARSCHUWING',
     info:            'INFO',
-    success:         'SUCCES'
+    success:         'SUCCES',
+    filter_error:    'Fout',
+    filter_warning:  'Waarschuwing',
+    filter_info:     'Info',
+    filter_success:  'Succes',
+    filter_acked:    'Herinnerd'
   },
   en: {
     acknowledge:     'Acknowledge',
     acknowledged:    'Acknowledged',
     dismiss:         'Dismiss',
     no_alerts:       'No active alerts',
+    no_alerts_filter:'No alerts match the current filter',
     every:           'every',
     min:             'min',
     error:           'ERROR',
     warning:         'WARNING',
     info:            'INFO',
-    success:         'SUCCESS'
+    success:         'SUCCESS',
+    filter_error:    'Error',
+    filter_warning:  'Warning',
+    filter_info:     'Info',
+    filter_success:  'Success',
+    filter_acked:    'Acknowledged'
   },
   de: {
     acknowledge:     'Bestätigen',
     acknowledged:    'Bestätigt',
     dismiss:         'Schließen',
     no_alerts:       'Keine aktiven Meldungen',
+    no_alerts_filter:'Keine Meldungen entsprechen dem Filter',
     every:           'alle',
     min:             'min',
     error:           'FEHLER',
     warning:         'WARNUNG',
     info:            'INFO',
-    success:         'ERFOLG'
+    success:         'ERFOLG',
+    filter_error:    'Fehler',
+    filter_warning:  'Warnung',
+    filter_info:     'Info',
+    filter_success:  'Erfolg',
+    filter_acked:    'Bestätigt'
   },
   fr: {
     acknowledge:     'Confirmer',
     acknowledged:    'Confirmé',
     dismiss:         'Fermer',
     no_alerts:       'Aucune alerte active',
+    no_alerts_filter:'Aucune alerte ne correspond au filtre',
     every:           'toutes les',
     min:             'min',
     error:           'ERREUR',
     warning:         'AVERTISSEMENT',
     info:            'INFO',
-    success:         'SUCCÈS'
+    success:         'SUCCÈS',
+    filter_error:    'Erreur',
+    filter_warning:  'Avertissement',
+    filter_info:     'Info',
+    filter_success:  'Succès',
+    filter_acked:    'Confirmé'
   },
   es: {
     acknowledge:     'Confirmar',
     acknowledged:    'Confirmado',
     dismiss:         'Cerrar',
     no_alerts:       'No hay alertas activas',
+    no_alerts_filter:'Ninguna alerta coincide con el filtro',
     every:           'cada',
     min:             'min',
     error:           'ERROR',
     warning:         'ADVERTENCIA',
     info:            'INFO',
-    success:         'ÉXITO'
+    success:         'ÉXITO',
+    filter_error:    'Error',
+    filter_warning:  'Advertencia',
+    filter_info:     'Info',
+    filter_success:  'Éxito',
+    filter_acked:    'Confirmado'
   },
   pt: {
     acknowledge:     'Confirmar',
     acknowledged:    'Confirmado',
     dismiss:         'Fechar',
     no_alerts:       'Sem alertas ativos',
+    no_alerts_filter:'Nenhum alerta corresponde ao filtro',
     every:           'cada',
     min:             'min',
     error:           'ERRO',
     warning:         'AVISO',
     info:            'INFO',
-    success:         'SUCESSO'
+    success:         'SUCESSO',
+    filter_error:    'Erro',
+    filter_warning:  'Aviso',
+    filter_info:     'Info',
+    filter_success:  'Sucesso',
+    filter_acked:    'Confirmado'
   },
   it: {
     acknowledge:     'Conferma',
     acknowledged:    'Confermato',
     dismiss:         'Chiudi',
     no_alerts:       'Nessun avviso attivo',
+    no_alerts_filter:'Nessun avviso corrisponde al filtro',
     every:           'ogni',
     min:             'min',
     error:           'ERRORE',
     warning:         'AVVISO',
     info:            'INFO',
-    success:         'SUCCESSO'
+    success:         'SUCCESSO',
+    filter_error:    'Errore',
+    filter_warning:  'Avviso',
+    filter_info:     'Info',
+    filter_success:  'Successo',
+    filter_acked:    'Confermato'
   },
   pl: {
     acknowledge:     'Potwierdź',
     acknowledged:    'Potwierdzone',
     dismiss:         'Zamknij',
     no_alerts:       'Brak aktywnych alertów',
+    no_alerts_filter:'Żadne alerty nie pasują do filtra',
     every:           'co',
     min:             'min',
     error:           'BŁĄD',
     warning:         'OSTRZEŻENIE',
     info:            'INFO',
-    success:         'SUKCES'
+    success:         'SUKCES',
+    filter_error:    'Błąd',
+    filter_warning:  'Ostrzeżenie',
+    filter_info:     'Info',
+    filter_success:  'Sukces',
+    filter_acked:    'Potwierdzone'
   }
 };
 
@@ -161,6 +209,8 @@ function HAAlertCard() {
   instance._haConfig = {};
   instance._haHass = null;
   instance._haAcked = {};
+  instance._haFilters = { error: true, warning: true, info: true, success: true, acknowledged: true };
+  instance._haFilterOpen = false;
   return instance;
 }
 
@@ -168,9 +218,7 @@ HAAlertCard.prototype = Object.create(HTMLElement.prototype);
 HAAlertCard.prototype.constructor = HAAlertCard;
 
 HAAlertCard.prototype.connectedCallback = function() {
-  if (!this.shadowRoot) {
-    this.attachShadow({ mode: 'open' });
-  }
+  if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
 };
 
 HAAlertCard.prototype.setConfig = function(config) {
@@ -186,11 +234,18 @@ HAAlertCard.prototype._haCallService = function(service, data) {
   if (this._haHass) this._haHass.callService('ha_alert', service, data);
 };
 
+HAAlertCard.prototype._haPassesFilter = function(alert, isAcked) {
+  if (!this._haFilters[alert.type]) return false;
+  if (isAcked && !this._haFilters.acknowledged) return false;
+  return true;
+};
+
 HAAlertCard.prototype._haRender = function() {
   if (!this._haHass || !this._haConfig || !this.shadowRoot) return;
 
-  var lang = (this._haHass.language || this._haHass.locale && this._haHass.locale.language || 'en');
+  var lang = (this._haHass.language || (this._haHass.locale && this._haHass.locale.language) || 'en');
   var t = haGetT(lang);
+  var self = this;
 
   var stateObj = this._haHass.states[this._haConfig.entity];
   var title = this._haConfig.title || 'Active Alerts';
@@ -199,7 +254,7 @@ HAAlertCard.prototype._haRender = function() {
     alerts = stateObj.attributes.alerts;
   }
 
-  var self = this;
+  // Clean up stale acked IDs
   var ids = {};
   var i, a;
   for (i = 0; i < alerts.length; i++) { ids[alerts[i].id] = true; }
@@ -207,25 +262,71 @@ HAAlertCard.prototype._haRender = function() {
     if (!ids[kid]) delete this._haAcked[kid];
   }
 
+  // Apply filters
+  var visible = [];
+  for (i = 0; i < alerts.length; i++) {
+    a = alerts[i];
+    var isAcked = a.acknowledged || !!self._haAcked[a.id];
+    if (self._haPassesFilter(a, isAcked)) visible.push({ alert: a, isAcked: isAcked });
+  }
+
+  // Check if any filter is inactive (to show indicator dot on filter button)
+  var anyFilterOff = false;
+  var filterKeys = ['error', 'warning', 'info', 'success', 'acknowledged'];
+  for (i = 0; i < filterKeys.length; i++) {
+    if (!this._haFilters[filterKeys[i]]) { anyFilterOff = true; break; }
+  }
+
   var body = '';
   if (alerts.length === 0) {
     body = '<div class="no-alerts"><div class="no-alerts-icon">&#128276;</div><p>' + t.no_alerts + '</p></div>';
+  } else if (visible.length === 0) {
+    body = '<div class="no-alerts"><div class="no-alerts-icon">&#128269;</div><p>' + t.no_alerts_filter + '</p></div>';
   } else {
-    for (i = 0; i < alerts.length; i++) {
-      a = alerts[i];
-      body += haBuildAlert(a, a.acknowledged || !!self._haAcked[a.id], t);
+    for (i = 0; i < visible.length; i++) {
+      body += haBuildAlert(visible[i].alert, visible[i].isAcked, t);
     }
   }
 
-  var badgeCls = alerts.length === 0 ? 'count-badge count-badge--zero' : 'count-badge';
+  var badgeCls = visible.length === 0 ? 'count-badge count-badge--zero' : 'count-badge';
+
+  // Build filter dropdown HTML
+  var filterItems = [
+    { key: 'error',        label: t.filter_error,   color: '#ef4444' },
+    { key: 'warning',      label: t.filter_warning,  color: '#f59e0b' },
+    { key: 'info',         label: t.filter_info,     color: '#3b82f6' },
+    { key: 'success',      label: t.filter_success,  color: '#22c55e' },
+    { key: 'acknowledged', label: t.filter_acked,    color: '#6b7280' }
+  ];
+  var dropdownHtml = '<div class="filter-dropdown' + (this._haFilterOpen ? ' filter-dropdown--open' : '') + '">';
+  for (i = 0; i < filterItems.length; i++) {
+    var fi = filterItems[i];
+    var checked = this._haFilters[fi.key];
+    dropdownHtml += '<label class="filter-item" data-filter="' + fi.key + '">';
+    dropdownHtml +=   '<span class="filter-check' + (checked ? ' filter-check--on' : '') + '" style="border-color:' + fi.color + ';background:' + (checked ? fi.color : 'transparent') + '">&#10003;</span>';
+    dropdownHtml +=   '<span class="filter-label">' + fi.label + '</span>';
+    dropdownHtml += '</label>';
+  }
+  dropdownHtml += '</div>';
+
+  var filterBtnCls = 'filter-btn' + (anyFilterOff ? ' filter-btn--active' : '');
 
   var css =
     ':host{display:block;font-family:var(--primary-font-family,Roboto,sans-serif)}' +
     'ha-card{padding:16px;box-sizing:border-box}' +
-    '.card-header{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:12px}' +
+    '.card-header{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:12px;position:relative}' +
     '.card-title{font-size:1.1rem;font-weight:600;color:var(--primary-text-color,#e8eaf2);display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px}' +
+    '.header-right{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:8px;position:relative}' +
     '.count-badge{background:var(--accent-color,#f59e0b);color:white;border-radius:20px;padding:3px 10px;font-size:.8rem;font-weight:700;min-width:24px;text-align:center}' +
     '.count-badge--zero{background:#4b5563}' +
+    '.filter-btn{background:none;border:1px solid #374151;border-radius:8px;color:var(--secondary-text-color,#9ca3af);cursor:pointer;padding:3px 8px;font-size:.85rem;min-width:0;position:relative}' +
+    '.filter-btn--active{border-color:var(--accent-color,#f59e0b);color:var(--accent-color,#f59e0b)}' +
+    '.filter-dropdown{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--card-background-color,#1f2937);border:1px solid #374151;border-radius:10px;padding:8px;z-index:999;min-width:170px;box-shadow:0 4px 16px rgba(0,0,0,.4)}' +
+    '.filter-dropdown--open{display:block}' +
+    '.filter-item{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;cursor:pointer;-webkit-user-select:none;user-select:none}' +
+    '.filter-item:hover{background:rgba(255,255,255,.06)}' +
+    '.filter-check{width:16px;height:16px;border-radius:4px;border:2px solid;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:center;justify-content:center;font-size:.65rem;color:white;-webkit-flex-shrink:0;flex-shrink:0}' +
+    '.filter-label{font-size:.85rem;color:var(--primary-text-color,#e8eaf2)}' +
     '.no-alerts{display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;-webkit-align-items:center;align-items:center;padding:24px 0;color:var(--secondary-text-color,#9ca3af);gap:8px}' +
     '.no-alerts-icon{font-size:2rem;opacity:.5}' +
     '.no-alerts p{margin:0;font-size:.9rem}' +
@@ -259,11 +360,56 @@ HAAlertCard.prototype._haRender = function() {
     '<ha-card>' +
       '<div class="card-header">' +
         '<div class="card-title">&#128276; ' + title + '</div>' +
-        '<span class="' + badgeCls + '">' + alerts.length + '</span>' +
+        '<div class="header-right">' +
+          '<button class="' + filterBtnCls + '" id="filter-btn">&#9776;</button>' +
+          dropdownHtml +
+          '<span class="' + badgeCls + '">' + visible.length + '</span>' +
+        '</div>' +
       '</div>' +
       '<div class="alerts-container">' + body + '</div>' +
     '</ha-card>';
 
+  // Filter button toggle
+  var filterBtn = this.shadowRoot.querySelector('#filter-btn');
+  if (filterBtn) {
+    filterBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      self._haFilterOpen = !self._haFilterOpen;
+      self._haRender();
+    });
+  }
+
+  // Filter item clicks
+  var dropdown = this.shadowRoot.querySelector('.filter-dropdown');
+  if (dropdown) {
+    dropdown.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var target = e.target || e.srcElement;
+      while (target && target !== dropdown) {
+        if (target.getAttribute('data-filter')) {
+          var key = target.getAttribute('data-filter');
+          self._haFilters[key] = !self._haFilters[key];
+          self._haRender();
+          return;
+        }
+        target = target.parentNode;
+      }
+    });
+  }
+
+  // Close dropdown when clicking outside
+  var closeHandler = function(e) {
+    if (self._haFilterOpen) {
+      self._haFilterOpen = false;
+      self._haRender();
+    }
+    document.removeEventListener('click', closeHandler);
+  };
+  if (this._haFilterOpen) {
+    document.addEventListener('click', closeHandler);
+  }
+
+  // Alert action clicks
   var container = this.shadowRoot.querySelector('.alerts-container');
   if (!container) return;
 
@@ -291,7 +437,7 @@ HAAlertCard.prototype._haRender = function() {
     btn.addEventListener('animationend', onEnd);
     btn.addEventListener('webkitAnimationEnd', onEnd);
 
-    var curLang = (self._haHass.language || self._haHass.locale && self._haHass.locale.language || 'en');
+    var curLang = (self._haHass.language || (self._haHass.locale && self._haHass.locale.language) || 'en');
     var curT = haGetT(curLang);
 
     if (btn.className.indexOf('btn-dismiss') !== -1) {
@@ -366,4 +512,4 @@ customElements.define('ha-alert-card-editor', HAAlertCardEditor);
 
 window.customCards = window.customCards || [];
 window.customCards.push({ type: 'ha-alert-card', name: 'HA Alert Card', description: 'Displays active HA Alert notifications.', preview: true });
-console.info('%c HA-ALERT-CARD %c v1.2.5 ', 'color:white;background:#3b82f6;font-weight:700;padding:2px 6px;', 'color:#3b82f6;background:rgba(59,130,246,.15);font-weight:700;padding:2px 6px;');
+console.info('%c HA-ALERT-CARD %c v1.3.0 ', 'color:white;background:#3b82f6;font-weight:700;padding:2px 6px;', 'color:#3b82f6;background:rgba(59,130,246,.15);font-weight:700;padding:2px 6px;');

@@ -8,7 +8,7 @@ Home Assistant can send push notifications to your phone, but those disappear. H
 
 **Backend integration**, registers three services in Home Assistant (`ha_alert.create`, `ha_alert.dismiss`, `ha_alert.acknowledge`) and provides a sensor (`sensor.ha_alert_active_alerts`) that tracks all active alerts.
 
-**Lovelace dashboard card**, displays all active alerts in a styled card with color-coded alert types, timestamps, acknowledge and dismiss buttons, and optional badges for repeating or auto-dismissing alerts.
+**Lovelace dashboard card**, displays all active alerts in a styled card with color-coded alert types, timestamps, acknowledge and dismiss buttons, filter controls, and optional badges for repeating or auto-dismissing alerts.
 
 ### Alert types
 
@@ -25,7 +25,9 @@ Home Assistant can send push notifications to your phone, but those disappear. H
 - **Repeating alerts**, repeat every X minutes until dismissed, so nothing gets overlooked
 - **Auto-dismiss**, link an alert to an entity; it disappears automatically when that entity reaches a target state
 - **Acknowledge**, mark an alert as seen without dismissing it; resets automatically on the next repeat
+- **Filter by type**, show or hide alerts per type (error, warning, info, success) and hide acknowledged alerts
 - Works on all browsers and the iOS Home Assistant companion app
+- Card labels adapt automatically to the Home Assistant language setting (nl, en, de, fr, es, pt, it, pl)
 
 ## 📸 Preview
 
@@ -33,7 +35,7 @@ Home Assistant can send push notifications to your phone, but those disappear. H
 
 ---
 
-**Integration version:** 2.2.1 | **Card version:** 1.2.4
+**Integration version:** 2.3.0 | **Card version:** 1.3.0
 
 ## 📁 Installation
 
@@ -135,6 +137,16 @@ data:
 
 ---
 
+## 🔍 Filtering alerts
+
+The card header contains a filter button (☰) to the left of the alert count badge. Clicking it opens a dropdown with a toggle for each alert type and one for acknowledged alerts. Active filters are remembered for as long as the card is on screen.
+
+When a filter is active, the filter button turns amber. The count badge always shows the number of alerts that are currently visible, not the total.
+
+When alerts exist but none pass the active filter, the card shows "No alerts match the current filter" instead of the empty state.
+
+---
+
 ## 🚀 Automation examples
 
 ### Low battery warning
@@ -194,6 +206,20 @@ automation:
 ---
 
 ## 📝 Changelog
+
+### [2.3.0] / Card 1.3.0
+- Filter button added to the card header (☰)
+- Filter dropdown with toggles for error, warning, info, success and acknowledged alerts
+- Count badge now shows the number of visible alerts, not the total
+- "No alerts match the current filter" empty state when filters hide all alerts
+- Filter state persists across Home Assistant state refreshes
+- Filter button turns amber when any filter is inactive
+- All filter labels translated in all 8 supported languages (nl, en, de, fr, es, pt, it, pl)
+
+### [2.2.1]
+- Service registration moved to `async_setup` for Bronze quality scale compliance
+- Card v1.2.5: multi-language support added (nl, en, de, fr, es, pt, it, pl)
+- Card labels now adapt automatically to the Home Assistant language setting
 
 ### [2.2.0]
 - Meets the Home Assistant Bronze quality scale
