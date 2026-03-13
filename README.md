@@ -1,38 +1,56 @@
 # HA Alert
 
-> Keeps track of all active alerts in Home Assistant and displays them on a clean dashboard card.
+HA Alert adds a persistent notification system to Home Assistant. When something goes wrong in your home, a pump failing, a window left open, a sensor reporting an unexpected value, you can create an alert from an automation. That alert stays visible on your dashboard until you dismiss it or until the situation resolves itself.
 
-**Integration version:** 2.2.0 | **Card version:** 1.2.4
+Home Assistant can send push notifications to your phone, but those disappear. HA Alert gives you a central place on your dashboard where you can see at a glance which alerts are active, which ones you have already seen, and which ones still need attention.
+
+### What's included
+
+**Backend integration**, registers three services in Home Assistant (`ha_alert.create`, `ha_alert.dismiss`, `ha_alert.acknowledge`) and provides a sensor (`sensor.ha_alert_active_alerts`) that tracks all active alerts.
+
+**Lovelace dashboard card**, displays all active alerts in a styled card with color-coded alert types, timestamps, acknowledge and dismiss buttons, and optional badges for repeating or auto-dismissing alerts.
+
+### Alert types
+
+| Type | Color | When to use |
+|---|---|---|
+| `error` | 🔴 Red | Something is broken and needs immediate action |
+| `warning` | 🟡 Yellow | Something needs attention but is not critical |
+| `info` | 🔵 Blue | Neutral information, e.g. a task completed |
+| `success` | 🟢 Green | Confirmation that something went well |
+
+### Key features
+
+- Alerts stay visible until explicitly dismissed or automatically resolved
+- **Repeating alerts**, repeat every X minutes until dismissed, so nothing gets overlooked
+- **Auto-dismiss**, link an alert to an entity; it disappears automatically when that entity reaches a target state
+- **Acknowledge**, mark an alert as seen without dismissing it; resets automatically on the next repeat
+- Works on all browsers and the iOS Home Assistant companion app
 
 ## 📸 Preview
 
 ![HA Alert dashboard card](docs/screenshot.png)
 
+---
+
+**Integration version:** 2.2.1 | **Card version:** 1.2.4
+
 ## 📁 Installation
 
-### Step 1: Copy the files
+### Via HACS (recommended)
 
-Copy the files to your Home Assistant configuration directory:
+Click the button below to add HA Alert as a custom repository in HACS:
 
-```
-config/
-├── custom_components/
-│   └── ha_alert/          ← folder with all Python files
-│       ├── __init__.py
-│       ├── manifest.json
-│       ├── const.py
-│       ├── sensor.py
-│       ├── services.yaml
-│       ├── config_flow.py
-│       ├── strings.json
-│       └── translations/
-│           ├── nl.json
-│           └── en.json
-└── www/
-    └── ha-alert-card.js   ← Lovelace card
-```
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=bartjanisse&repository=ha-alert&category=integration)
 
-### Step 2: Register the card
+Or add it manually:
+1. Open HACS in Home Assistant
+2. Click the three-dot menu (top right) and choose **Custom repositories**
+3. Enter `https://github.com/bartjanisse/ha-alert` and select **Integration**
+4. Click **Add**, search for **HA Alert** and install it
+5. Restart Home Assistant
+
+### Register the card
 
 Add the following via **Settings → Dashboards → Resources** (three-dot menu, top right):
 
@@ -48,11 +66,11 @@ lovelace:
       type: module
 ```
 
-### Step 3: Add the integration
+### Add the integration
 
 Go to **Settings → Integrations → Add Integration** and search for **HA Alert**.
 
-### Step 4: Add the card to your dashboard
+### Add the card to your dashboard
 
 ```yaml
 type: custom:ha-alert-card
