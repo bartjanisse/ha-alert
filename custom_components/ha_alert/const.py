@@ -26,3 +26,7 @@ ATTR_ALERTS = "alerts"
 ATTR_LAST_UPDATED = "last_updated"
 
 SENSOR_ACTIVE_ALERTS = "active_alerts"
+SENSOR_ERROR_COUNT   = "error_count"
+SENSOR_WARNING_COUNT = "warning_count"
+SENSOR_INFO_COUNT    = "info_count"
+SENSOR_SUCCESS_COUNT = "success_count"

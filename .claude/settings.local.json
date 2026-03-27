@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(jq --version)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(pip install:*)",
+      "Bash(python -c \"import ast, sys; [ast.parse\\(open\\(f\\).read\\(\\)\\) for f in [''custom_components/ha_alert/sensor.py'', ''custom_components/ha_alert/const.py'']] and print\\(''Syntax OK''\\)\")",
+      "Bash(python -c \":*)",
+      "Bash(python -m pytest tests/test_init.py -v --override-ini=asyncio_mode=auto)"
+    ]
+  }
+}
