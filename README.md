@@ -35,7 +35,7 @@ Home Assistant can send push notifications to your phone, but those disappear. H
 
 ---
 
-**Integration version:** 2.3.0 | **Card version:** 1.3.0
+**Integration version:** 2.4.0 | **Card version:** 1.3.0
 
 ## 📁 Installation
 
@@ -206,6 +206,12 @@ automation:
 ---
 
 ## 📝 Changelog
+
+### [2.4.0]
+- Four new sensors added, one per alert type: `sensor.ha_alert_error_alerts`, `sensor.ha_alert_warning_alerts`, `sensor.ha_alert_info_alerts`, `sensor.ha_alert_success_alerts`
+- Each sensor returns the count of active alerts of that type and can be used as a trigger or condition in automations
+- Documentation updated (NL and EN) with sensor overview and automation example
+- Test suite mock environment fixed: all 22 tests now pass on Windows without a full HA installation
 
 ### [2.3.0] / Card 1.3.0
 - Filter button added to the card header (☰)
